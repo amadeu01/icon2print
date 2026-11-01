@@ -1,0 +1,73 @@
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from . import __version__
+from .models import BoxParams, extrude, make_box
+from .outline import load_icon, normalize
+
+
+def _common(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument("icon", help="SVG or raster (PNG/JPG/...) icon")
+    sp.add_argument("-o", "--out", required=True, help="output file (extrude) or directory (box)")
+    sp.add_argument("-w", "--width", type=float, default=80.0, help="icon width in mm (default 80)")
+    sp.add_argument("--smooth", type=float, default=0.0, help="round off details smaller than this many mm")
+    sp.add_argument("--threshold", type=float, default=0.5, help="raster tracing threshold 0..1")
+    sp.add_argument("--invert", action="store_true", help="raster: treat light pixels as solid")
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(prog="icon2print", description="2D icon -> 3D printable STL")
+    ap.add_argument("--version", action="version", version=__version__)
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    e = sub.add_parser("extrude", help="solid plaque/keychain/coaster in the icon shape")
+    _common(e)
+    e.add_argument("--height", type=float, default=3.0, help="thickness in mm (default 3)")
+
+    b = sub.add_parser("box", help="icon-shaped box with lid (e.g. for gym chalk)")
+    _common(b)
+    d = BoxParams()
+    b.add_argument("--height", type=float, default=d.height, help="box height in mm (default 40)")
+    b.add_argument("--wall", type=float, default=d.wall)
+    b.add_argument("--floor", type=float, default=d.floor)
+    b.add_argument("--lid-height", type=float, default=d.lid_height)
+    b.add_argument("--plug-height", type=float, default=d.plug_height)
+    b.add_argument("--clearance", type=float, default=d.clearance, help="lid fit gap in mm (default 0.25)")
+    b.add_argument("--keep-holes", action="store_true", help="keep holes in the icon (they will leak!)")
+
+    a = ap.parse_args(argv)
+    raster_kw = {"threshold": a.threshold, "invert": a.invert}
+    try:
+        geom = load_icon(a.icon, **(raster_kw if Path(a.icon).suffix.lower() != ".svg" else {}))
+        geom = normalize(geom, a.width, a.smooth)
+        minx, miny, maxx, maxy = geom.bounds
+        print(f"Icon size: {maxx - minx:.1f} x {maxy - miny:.1f} mm")
+        if a.cmd == "extrude":
+            out = Path(a.out)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            extrude(geom, a.height).export(out)
+            print(f"Wrote {out}")
+        else:
+            params = BoxParams(a.height, a.wall, a.floor, a.lid_height, a.plug_height,
+                               a.clearance, fill_holes=not a.keep_holes)
+            r = make_box(geom, params)
+            out = Path(a.out)
+            out.mkdir(parents=True, exist_ok=True)
+            stem = Path(a.icon).stem
+            r.body.export(out / f"{stem}_box.stl")
+            r.lid.export(out / f"{stem}_lid.stl")
+            print(f"Wrote {out / (stem + '_box.stl')} and {out / (stem + '_lid.stl')}")
+            print(f"Capacity: {r.capacity_ml:.0f} ml | widest inner circle: {r.inner_diameter:.1f} mm")
+            for w in r.warnings:
+                print(f"WARNING: {w}", file=sys.stderr)
+    except (ValueError, OSError) as ex:
+        print(f"error: {ex}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

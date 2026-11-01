@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <!-- Single-colour barbell icon: overlapping shapes are merged automatically -->
+  <rect x="2"   y="30" width="20" height="40" rx="4"/>
+  <rect x="16"  y="12" width="24" height="76" rx="7"/>
+  <rect x="34"  y="40" width="132" height="20"/>
+  <rect x="160" y="12" width="24" height="76" rx="7"/>
+  <rect x="178" y="30" width="20" height="40" rx="4"/>
+</svg>

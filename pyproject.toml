@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "icon2print"
+version = "0.1.0"
+description = "Turn 2D icons (SVG/PNG) into 3D-printable STL files, including icon-shaped chalk boxes for lifters."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "numpy",
+  "pillow",
+  "scikit-image",
+  "shapely>=2.1",
+  "svgelements",
+  "trimesh",
+  "mapbox-earcut",
+  "manifold3d",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+icon2print = "icon2print.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
