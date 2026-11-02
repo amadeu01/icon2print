@@ -82,3 +82,34 @@ def test_emoji_box(tmp_path):
         pytest.skip("no colour emoji font installed")
     assert main(["box", "🦄", "-o", str(tmp_path), "-w", "90"]) == 0
     assert (tmp_path / "unicorn_face_box.stl").exists()
+
+
+def _slide(src, **kw):
+    g = normalize(load_icon(src), 90, smooth=1.0)
+    return make_box(g, BoxParams(height=40, wall=2.4, lid_style="slide", **kw))
+
+
+@pytest.mark.parametrize("name", ["barbell", "kettlebell"])
+def test_slide_lid_printable_and_slides(name):
+    import trimesh
+    r = _slide(EX / f"{name}.svg", detent=0)
+    assert r.body.is_volume and r.lid.is_volume
+    g0 = 40 - (2 + 7 * 0.2)  # lid_height 3 -> 2 mm rail + 7 chamfer layers
+    lid = r.lid.copy()
+    lid.apply_translation([0, 0, g0])
+    for dx in (0, 0.15, 2, 10, 40, 120):  # lid must clear the box all the way out
+        moved = lid.copy()
+        moved.apply_translation([dx, 0, 0])
+        assert trimesh.boolean.intersection([r.body, moved], engine="manifold").volume < 1e-6
+    lifted = lid.copy()
+    lifted.apply_translation([0, 0, 1.0])  # dovetail: lid can't be lifted straight out
+    assert trimesh.boolean.intersection([r.body, lifted], engine="manifold").volume > 1
+
+
+def test_slide_wall_too_thin():
+    with pytest.raises(ValueError):
+        make_box(box(0, 0, 60, 60), BoxParams(wall=2.0, lid_style="slide"))
+
+
+def test_cli_slide(tmp_path):
+    assert main(["box", str(EX / "kettlebell.svg"), "-o", str(tmp_path), "--lid", "slide"]) == 0

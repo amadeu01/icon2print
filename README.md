@@ -50,6 +50,20 @@ icon2print box 🦄 -o out --emoji-font "/System/Library/Fonts/Apple Color Emoji
 
 Chunky silhouettes (🥩 🍗 ❤️ 🦄 🍔) hold the most chalk; thin-legged animals have less room.
 
+### Sliding lid (dovetail)
+
+`--lid slide` swaps the friction-fit plug for a rail lid that slides out towards +X. The top of the
+walls gets a 45° dovetail groove (prints without supports); the lid has the matching profile and a
+small click bump + dimple (`--detent`, 0 disables). It's parametric, so it works for any icon shape.
+
+```bash
+icon2print box 🦄 -o out --lid slide --width 90 --height 40   # wall defaults to 2.4 mm
+```
+
+`--clearance 0.2` is a good start for a calibrated printer; `--lip` is the rail depth. Needs
+`wall >= lip + clearance + 0.8`. Print the box upright and the lid flat. The bump height is a
+guess and needs tuning on your printer.
+
 ### Box options
 
 | Option | Default | Meaning |
