@@ -51,15 +51,33 @@ icon2print box 🦄 -o out --emoji-font "/System/Library/Fonts/Apple Color Emoji
 
 Chunky silhouettes (🥩 🍗 ❤️ 🦄 🍔) hold the most chalk; thin-legged animals have less room.
 
+### Sliding lid (dovetail)
+
+`--lid slide` swaps the friction-fit plug for a rail lid that slides out towards +X. The top of the
+walls gets a 45° dovetail groove (prints without supports); the lid has the matching profile and a
+small click bump + dimple (`--detent`, 0 disables). It's parametric, so it works for any icon shape.
+
+```bash
+icon2print box 🦄 -o out --lid slide --width 90 --height 40   # wall defaults to 2.4 mm
+```
+
+`--clearance 0.2` is a good start for a calibrated printer; `--lip` is the rail depth. Needs
+`wall >= lip + clearance + 0.8`. Print the box upright and the lid flat. The 45° steps assume a **0.2 mm layer height or finer**
+(coarser layers overhang more than 45°). The click bump is a gentle ride-over at 0.3 mm; above
+~0.4 mm it becomes an interference fit. Tune both on your printer. Capacity excludes the space
+taken by the lid.
+
 ### Box options
 
 | Option | Default | Meaning |
 |---|---|---|
 | `--width` | 80 | Icon width in mm (sets overall size) |
 | `--height` | 40 | Box height in mm |
-| `--wall` / `--floor` | 2 / 2 | Wall and bottom thickness (≥ 2× nozzle width) |
+| `--lid` | plug | `plug` (friction-fit) or `slide` (dovetail, see above) |
+| `--wall` / `--floor` | 2 (2.4 for `slide`) / 2 | Wall and bottom thickness (≥ 2× nozzle width) |
 | `--lid-height` | 3 | Lid plate thickness |
-| `--plug-height` | 5 | How far the lid plug enters the box |
+| `--plug-height` | 5 | How far the lid plug enters the box (plug lids only) |
+| `--lip` / `--detent` | 1 / 0.3 | Slide lids only: rail depth / click-bump height (0 = none) |
 | `--clearance` | 0.25 | Lid fit gap; raise if too tight, lower if loose |
 | `--smooth` | 0 | Round off details smaller than N mm (helps printing) |
 | `--keep-holes` | off | Keep icon holes (they would leak chalk, so they're sealed by default) |
