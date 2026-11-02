@@ -15,23 +15,29 @@
   header a { color:var(--accent); }
   main { display:grid; grid-template-columns:260px 1fr; gap:16px; max-width:1200px; margin:12px auto 32px; padding:0 16px; }
   @media (max-width:760px) { main { grid-template-columns:1fr; } }
-  .list { display:flex; flex-direction:column; gap:6px; max-height:70vh; overflow:auto; }
+  .list { display:flex; flex-direction:column; gap:6px; max-height:75vh; overflow:auto; }
   @media (max-width:760px) { .list { flex-direction:row; max-height:none; overflow-x:auto; padding-bottom:6px; } .list button { flex:0 0 auto; } }
   .list button { text-align:left; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font:inherit; cursor:pointer; }
   .list button[aria-pressed="true"] { border-color:var(--accent); outline:1px solid var(--accent); }
   .stage { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
-  #view { height:min(65vh,560px); position:relative; }
+  #view { height:min(62vh,540px); position:relative; touch-action:pan-y; }
   #view canvas { display:block; width:100%; height:100%; }
-  #msg { position:absolute; inset:0; display:grid; place-items:center; color:var(--muted); pointer-events:none; }
-  .bar { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; padding:10px 12px; border-top:1px solid var(--line); }
-  .seg { display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-  .seg button { border:0; background:transparent; color:var(--ink); padding:7px 12px; font:inherit; cursor:pointer; }
+  #msg { position:absolute; inset:0; display:grid; place-items:center; padding:16px; text-align:center; color:var(--muted); pointer-events:none; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; padding:10px 12px; border-top:1px solid var(--line); }
+  .grp { display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .grp > span.t { color:var(--muted); font-size:13px; }
+  .seg { display:inline-flex; flex-wrap:wrap; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  .seg button { border:0; background:transparent; color:var(--ink); padding:7px 11px; font:inherit; cursor:pointer; }
+  .seg button + button { border-left:1px solid var(--line); }
   .seg button[aria-pressed="true"] { background:var(--accent); color:#fff; }
+  .seg button:disabled { opacity:.4; cursor:default; }
   .meta { color:var(--muted); margin-left:auto; }
   a.dl { color:var(--accent); text-decoration:none; }
   a.dl:hover { text-decoration:underline; }
   button:focus-visible, input:focus-visible, a:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
   label { color:var(--muted); display:inline-flex; gap:6px; align-items:center; }
+  #openRow[hidden] { display:none; }
+  #openRow input[type=range] { width:140px; accent-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -44,11 +50,31 @@
   <section class="stage">
     <div id="view"><div id="msg" role="status" aria-live="polite">Loading…</div></div>
     <div class="bar">
-      <div class="seg" role="group" aria-label="Part">
-        <button data-part="box" aria-pressed="true">Box</button>
-        <button data-part="lid" aria-pressed="false">Lid</button>
-        <button data-part="both" aria-pressed="false">Both</button>
-      </div>
+      <div class="grp"><span class="t">Lid</span>
+        <div class="seg" id="styleSeg" role="group" aria-label="Lid style">
+          <button data-style="plug" aria-pressed="true">Snap-fit plug</button>
+          <button data-style="slide" aria-pressed="false">Sliding dovetail</button>
+        </div></div>
+      <div class="grp"><span class="t">Show</span>
+        <div class="seg" id="partSeg" role="group" aria-label="Part">
+          <button data-part="box" aria-pressed="false">Box</button>
+          <button data-part="lid" aria-pressed="false">Lid</button>
+          <button data-part="both" aria-pressed="false">Both</button>
+          <button data-part="assembled" aria-pressed="true">Assembled</button>
+        </div></div>
+      <div class="grp" id="openRow"><label>Open <input type="range" id="open" min="0" max="100" value="0" aria-label="Open the lid"></label></div>
+    </div>
+    <div class="bar">
+      <div class="grp"><span class="t">View</span>
+        <div class="seg" id="viewSeg" role="group" aria-label="Camera view">
+          <button data-view="iso" aria-pressed="true">3D</button>
+          <button data-view="front" aria-pressed="false">Front</button>
+          <button data-view="back" aria-pressed="false">Back</button>
+          <button data-view="left" aria-pressed="false">Left</button>
+          <button data-view="right" aria-pressed="false">Right</button>
+          <button data-view="top" aria-pressed="false">Top</button>
+          <button data-view="bottom" aria-pressed="false">Bottom</button>
+        </div></div>
       <label><input type="checkbox" id="spin" checked> Auto-rotate</label>
       <span id="dl"></span>
       <span class="meta" id="meta"></span>
@@ -81,16 +107,22 @@ const view = $('#view'), msg = $('#msg');
 let renderer;
 try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); }
 catch (e) { msg.textContent = 'WebGL is not supported in this browser; use the downloads below.'; }
-if (renderer) renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-if (renderer) { view.appendChild(renderer.domElement); renderer.domElement.setAttribute('role', 'img'); renderer.domElement.setAttribute('aria-label', '3D preview of the selected chalk box'); }
+if (renderer) {
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  view.appendChild(renderer.domElement);
+  renderer.domElement.setAttribute('role', 'img');
+  renderer.domElement.setAttribute('aria-label', '3D preview of the selected chalk box');
+  renderer.domElement.style.touchAction = 'pan-y'; // let phones scroll the page vertically
+}
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(40, 1, 1, 2000);
+const camera = new THREE.PerspectiveCamera(40, 1, 1, 3000);
+camera.up.set(0, 0, 1);
 const controls = new OrbitControls(camera, renderer ? renderer.domElement : view);
-if (renderer) renderer.domElement.style.touchAction = 'pan-y'; // let phones scroll the page vertically
 controls.enableDamping = true;
 scene.add(new THREE.HemisphereLight(0xffffff, 0x555566, 1.1));
 const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(120, -160, 220); scene.add(key);
 const fill = new THREE.DirectionalLight(0xffffff, 0.6); fill.position.set(-150, 100, 80); scene.add(fill);
+const back = new THREE.DirectionalLight(0xffffff, 0.5); back.position.set(0, 160, -120); scene.add(back); // lights top/back/bottom views
 const group = new THREE.Group(); scene.add(group);
 
 const loader = new STLLoader();
@@ -99,9 +131,16 @@ const load = (url) => {
   if (!cache.has(url)) cache.set(url, new Promise((res, rej) => loader.load(url, res, undefined, rej)).catch((e) => { cache.delete(url); throw e; }));
   return cache.get(url);
 };
-const COLORS = { box: 0xd9480f, lid: 0x2f7fd0 };
+const MATERIALS = {
+  box: new THREE.MeshStandardMaterial({ color: 0xd9480f, roughness: 0.55, metalness: 0.05 }),
+  lid: new THREE.MeshStandardMaterial({ color: 0x2f7fd0, roughness: 0.55, metalness: 0.05 }),
+};
+const mesh = (geo, kind) => new THREE.Mesh(geo, MATERIALS[kind]);
 
-let models = [], current = null, part = 'box', token = 0;
+let manifest = null, models = [], current = null;
+let style = 'plug', part = 'assembled', viewName = 'iso', token = 0;
+let lidMesh = null, lidBase = null, boxSize = null, framedFor = null;
+const flipCache = new Map();
 
 function resize() {
   if (!renderer) return;
@@ -111,49 +150,114 @@ function resize() {
 }
 addEventListener('resize', resize);
 
-const MATERIALS = Object.fromEntries(Object.entries(COLORS).map(([k, color]) =>
-  [k, new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.05 })]));
-function mesh(geo, kind) { return new THREE.Mesh(geo, MATERIALS[kind]); }
+// ---- camera views (z is up; the icon lies in the XY plane, so "Top" shows the icon outline)
+const VIEWS = {
+  iso:    { dir: [0.55, -0.8, 0.62], up: [0, 0, 1] },
+  front:  { dir: [0, -1, 0],  up: [0, 0, 1] },
+  back:   { dir: [0, 1, 0],   up: [0, 0, 1] },
+  left:   { dir: [-1, 0, 0],  up: [0, 0, 1] },
+  right:  { dir: [1, 0, 0],   up: [0, 0, 1] },
+  top:    { dir: [0, 0, 1],   up: [0, 1, 0] },
+  bottom: { dir: [0, 0, -1],  up: [0, 1, 0] },
+};
+let sceneSize = new THREE.Vector3(100, 100, 40);
+function setView(name, animate = true) {
+  const v = VIEWS[name]; if (!v) return;
+  viewName = name;
+  document.querySelectorAll('#viewSeg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === name));
+  const r = Math.max(sceneSize.x, sceneSize.y, sceneSize.z);
+  const dist = (name === 'iso' ? r * 1.9 : r * 1.7) * (part === 'assembled' ? 1.3 : 1);  // leave room for the lid to slide out
+  const target = new THREE.Vector3(0, 0, sceneSize.z / 2);
+  const dir = new THREE.Vector3(...v.dir).normalize();
+  const toPos = target.clone().addScaledVector(dir, dist);
+  const toUp = new THREE.Vector3(...v.up);
+  if (name !== 'iso') { $('#spin').checked = false; controls.autoRotate = false; }  // auto-rotate would fight a fixed view
+  if (!animate || !renderer) { camera.up.copy(toUp); camera.position.copy(toPos); controls.target.copy(target); controls.update(); return; }
+  const fromPos = camera.position.clone(), fromTarget = controls.target.clone();
+  camera.up.copy(toUp);
+  const t0 = performance.now(), my = ++animToken;
+  const step = (now) => {
+    if (my !== animToken) return;
+    const k = Math.min(1, (now - t0) / 350), e = k * k * (3 - 2 * k);
+    // interpolate on the sphere around the target so the camera never cuts through the model
+    const a = fromPos.clone().sub(fromTarget), b = toPos.clone().sub(target);
+    const len = a.length() + (b.length() - a.length()) * e;
+    const dirNow = a.clone().normalize().lerp(b.clone().normalize(), e).normalize();
+    camera.position.copy(fromTarget.clone().lerp(target, e)).addScaledVector(dirNow, len);
+    controls.target.copy(fromTarget).lerp(target, e);
+    controls.update();
+    if (k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+let animToken = 0;
 
-let framedFor = null;
+// ---- assembling
+function flippedLid(lidGeo, key, bbox) {
+  // plug lid: rotate 180 deg about the X axis so the plug points down into the box, plate on top
+  if (!flipCache.has(key)) {
+    const H = bbox.max.z, t = manifest.params.lid_height;
+    const m = new THREE.Matrix4().set(1, 0, 0, 0,  0, -1, 0, bbox.min.y + bbox.max.y,  0, 0, -1, H + t,  0, 0, 0, 1);
+    flipCache.set(key, lidGeo.clone().applyMatrix4(m));
+  }
+  return flipCache.get(key);
+}
+
+function applyOpen() {
+  if (!lidMesh || part !== 'assembled') return;
+  const t = $('#open').value / 100;
+  lidMesh.position.copy(lidBase);
+  if (style === 'slide') lidMesh.position.x += t * (boxSize.x + 12);   // slides out towards +X
+  else lidMesh.position.z += t * 45;                                     // lifts straight off
+}
+
 async function show() {
   if (!current || !renderer) return;
   const my = ++token;
   msg.textContent = 'Loading…'; msg.style.display = 'grid';
+  const info = current[style];
   try {
-    const [boxGeo, lidGeo] = await Promise.all([load(`models/${current.slug}_box.stl`), load(`models/${current.slug}_lid.stl`)]);
+    const base = `models/${encodeURIComponent(current.slug)}_${style}`;
+    const [boxGeo, lidGeo] = await Promise.all([load(`${base}_box.stl`), load(`${base}_lid.stl`)]);
     if (my !== token) return;
     group.clear();
+    lidMesh = null;
+    boxGeo.computeBoundingBox();
+    const bb = boxGeo.boundingBox;
+    boxSize = bb.getSize(new THREE.Vector3());
     const items = [];
     if (part !== 'lid') items.push(mesh(boxGeo, 'box'));
-    if (part !== 'box') items.push(mesh(lidGeo, 'lid'));
-    const box = new THREE.Box3().setFromBufferAttribute(boxGeo.attributes.position);
-    const size = box.getSize(new THREE.Vector3());
-    if (part === 'both') { items[1].position.x = size.x + 15; }
-    items.forEach((m) => group.add(m));
-    const bb = new THREE.Box3().setFromObject(group);
-    const c = bb.getCenter(new THREE.Vector3()), s = bb.getSize(new THREE.Vector3());
-    group.position.set(-c.x, -c.y, -bb.min.z);
-    const r = Math.max(s.x, s.y, s.z);
-    if (framedFor !== current.slug) {  // keep the user's view when only toggling box/lid
-      framedFor = current.slug;
-      controls.target.set(0, 0, s.z / 2);
-      camera.up.set(0, 0, 1);
-      camera.position.set(r * 0.85, -r * 1.2, r * 0.95);
-      controls.update();
+    if (part === 'lid' || part === 'both') {
+      const m = mesh(lidGeo, 'lid');
+      if (part === 'both') m.position.x = boxSize.x + 15;
+      items.push(m);
+    } else if (part === 'assembled') {
+      const m = style === 'slide' ? mesh(lidGeo, 'lid') : mesh(flippedLid(lidGeo, `${current.slug}_${style}`, bb), 'lid');
+      lidBase = new THREE.Vector3(0, 0, style === 'slide' ? info.lid_z : 0);
+      lidMesh = m;
+      items.push(m);
     }
+    items.forEach((m) => group.add(m));
+    group.position.set(0, 0, 0);
+    const gb = new THREE.Box3().setFromObject(group), c = gb.getCenter(new THREE.Vector3());
+    group.position.set(-c.x, -c.y, -gb.min.z);
+    sceneSize = gb.getSize(new THREE.Vector3());
+    applyOpen();
+    $('#openRow').hidden = part !== 'assembled';
+    if (framedFor !== current.slug) { framedFor = current.slug; setView(viewName, false); }  // keep the view when only toggling options
     msg.style.display = 'none';
-    $('#meta').textContent = `${current.capacity_ml} ml · widest inner circle ${current.inner_mm} mm`;
+    $('#meta').textContent = `${info.capacity_ml} ml · widest inner circle ${info.inner_mm} mm`;
     const dl = $('#dl'); dl.replaceChildren();
     ['box', 'lid'].forEach((k, i) => {
       if (i) dl.append(' · ');
       const a = document.createElement('a');
-      a.className = 'dl'; a.href = `models/${encodeURIComponent(current.slug)}_${k}.stl`; a.download = ''; a.textContent = `${k}.stl`;
+      a.className = 'dl'; a.href = `${base}_${k}.stl`; a.download = ''; a.textContent = `${k}.stl`;
       dl.append(a);
     });
   } catch (e) {
     if (my !== token) return;
-    msg.textContent = 'Could not load model.'; msg.style.display = 'grid'; console.error(e); }
+    msg.textContent = 'Could not load model.'; msg.style.display = 'grid'; console.error(e);
+  }
 }
 
 function select(slug) {
@@ -164,21 +268,28 @@ function select(slug) {
   show();
 }
 
-document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
-  part = b.dataset.part;
-  document.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', x === b));
-  show();
-}));
-$('#spin').addEventListener('change', (e) => { controls.autoRotate = e.target.checked; });
+function bindSeg(sel, attr, onPick) {
+  document.querySelectorAll(`${sel} button`).forEach((b) => b.addEventListener('click', () => {
+    document.querySelectorAll(`${sel} button`).forEach((x) => x.setAttribute('aria-pressed', x === b));
+    onPick(b.dataset[attr]);
+  }));
+}
+bindSeg('#styleSeg', 'style', (v) => { style = v; $('#open').value = 0; show(); });
+bindSeg('#partSeg', 'part', (v) => { part = v; show(); });
+document.querySelectorAll('#viewSeg button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+$('#open').addEventListener('input', applyOpen);
+$('#spin').addEventListener('change', (e) => { controls.autoRotate = e.target.checked; if (e.target.checked && viewName !== 'iso') setView('iso'); });
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 $('#spin').checked = !reduce;
 controls.autoRotate = !reduce; controls.autoRotateSpeed = 2;
+controls.addEventListener('start', () => { animToken++; });  // user grabbed the camera: stop any view animation
 
 (async () => {
   try {
-    const manifest = await (await fetch('models/manifest.json')).json();
+    manifest = await (await fetch('models/manifest.json')).json();
     models = manifest.models;
-    $('#params').textContent = `${manifest.params.width} mm wide, ${manifest.params.height} mm tall, ${manifest.params.wall} mm walls`;
+    const p = manifest.params;
+    $('#params').textContent = `${p.width} mm wide, ${p.height} mm tall, ${p.wall} mm walls`;
   } catch (e) { msg.textContent = `Could not load model list (${e.message}).`; msg.style.display = 'grid'; return; }
   const list = $('#list');
   for (const m of models) {

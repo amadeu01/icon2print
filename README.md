@@ -6,6 +6,7 @@ powerlifter can carry chalk in a kettlebell, barbell, plate… or any logo-shape
 
 **Live 3D viewer:** https://amadeu01.github.io/icon2print/ (rotate and download the STLs in your browser).
 To view locally, from the repo root: `python3 -m http.server -d docs` and open http://localhost:8000 (opening `index.html` directly from disk won't work). To publish: repo Settings → Pages → Deploy from a branch → `main` / `/docs`.
+The viewer lets you pick the lid style (snap-fit plug or sliding dovetail), show box / lid / both / assembled (with an "open" slider), and jump to Front / Back / Left / Right / Top / Bottom views.
 Rebuild the models with `python scripts/build_site.py`; the page itself is static (`docs/`, three.js vendored).
 
 ## Install
