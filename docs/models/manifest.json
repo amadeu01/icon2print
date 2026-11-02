@@ -1,122 +1,129 @@
-[
- {
-  "slug": "unicorn",
-  "label": "Unicorn 🦄",
-  "capacity_ml": 165,
-  "inner_mm": 47.3
+{
+ "params": {
+  "width": 90,
+  "height": 40,
+  "wall": 2.0
  },
- {
-  "slug": "steak",
-  "label": "Steak 🥩",
-  "capacity_ml": 189,
-  "inner_mm": 62.9
- },
- {
-  "slug": "biceps",
-  "label": "Flexed biceps 💪",
-  "capacity_ml": 184,
-  "inner_mm": 52.2
- },
- {
-  "slug": "fire",
-  "label": "Fire 🔥",
-  "capacity_ml": 221,
-  "inner_mm": 65.5
- },
- {
-  "slug": "gorilla",
-  "label": "Gorilla 🦍",
-  "capacity_ml": 192,
-  "inner_mm": 41.1
- },
- {
-  "slug": "bear",
-  "label": "Bear 🐻",
-  "capacity_ml": 223,
-  "inner_mm": 78.2
- },
- {
-  "slug": "t-rex",
-  "label": "T-Rex 🦖",
-  "capacity_ml": 94,
-  "inner_mm": 33.3
- },
- {
-  "slug": "shark",
-  "label": "Shark 🦈",
-  "capacity_ml": 113,
-  "inner_mm": 33.0
- },
- {
-  "slug": "octopus",
-  "label": "Octopus 🐙",
-  "capacity_ml": 129,
-  "inner_mm": 47.2
- },
- {
-  "slug": "pizza",
-  "label": "Pizza 🍕",
-  "capacity_ml": 219,
-  "inner_mm": 67.8
- },
- {
-  "slug": "burger",
-  "label": "Burger 🍔",
-  "capacity_ml": 247,
-  "inner_mm": 78.4
- },
- {
-  "slug": "rocket",
-  "label": "Rocket 🚀",
-  "capacity_ml": 120,
-  "inner_mm": 32.3
- },
- {
-  "slug": "star",
-  "label": "Star ⭐",
-  "capacity_ml": 116,
-  "inner_mm": 45.9
- },
- {
-  "slug": "heart",
-  "label": "Heart ❤️",
-  "capacity_ml": 175,
-  "inner_mm": 54.7
- },
- {
-  "slug": "mech-arm",
-  "label": "Mechanical arm 🦾",
-  "capacity_ml": 136,
-  "inner_mm": 40.8
- },
- {
-  "slug": "drumstick",
-  "label": "Drumstick 🍗",
-  "capacity_ml": 109,
-  "inner_mm": 48.0
- },
- {
-  "slug": "ox",
-  "label": "Ox 🐂",
-  "capacity_ml": 113,
-  "inner_mm": 36.4
- },
- {
-  "slug": "lion",
-  "label": "Lion 🦁",
-  "capacity_ml": 225,
-  "inner_mm": 78.1
- },
- {
-  "slug": "kettlebell",
-  "label": "Kettlebell (SVG)",
-  "capacity_ml": 274,
-  "inner_mm": 80.5
- },
- {
-  "slug": "barbell",
-  "label": "Barbell (SVG)",
-  "capacity_ml": 36,
-  "inner_mm": 15.0
- }
-]
+ "models": [
+  {
+   "slug": "unicorn",
+   "label": "Unicorn 🦄",
+   "capacity_ml": 165,
+   "inner_mm": 47.3
+  },
+  {
+   "slug": "steak",
+   "label": "Steak 🥩",
+   "capacity_ml": 189,
+   "inner_mm": 62.9
+  },
+  {
+   "slug": "biceps",
+   "label": "Flexed biceps 💪",
+   "capacity_ml": 184,
+   "inner_mm": 52.2
+  },
+  {
+   "slug": "fire",
+   "label": "Fire 🔥",
+   "capacity_ml": 221,
+   "inner_mm": 65.5
+  },
+  {
+   "slug": "gorilla",
+   "label": "Gorilla 🦍",
+   "capacity_ml": 192,
+   "inner_mm": 41.1
+  },
+  {
+   "slug": "bear",
+   "label": "Bear 🐻",
+   "capacity_ml": 223,
+   "inner_mm": 78.2
+  },
+  {
+   "slug": "t-rex",
+   "label": "T-Rex 🦖",
+   "capacity_ml": 94,
+   "inner_mm": 33.3
+  },
+  {
+   "slug": "shark",
+   "label": "Shark 🦈",
+   "capacity_ml": 113,
+   "inner_mm": 33.0
+  },
+  {
+   "slug": "octopus",
+   "label": "Octopus 🐙",
+   "capacity_ml": 129,
+   "inner_mm": 47.2
+  },
+  {
+   "slug": "pizza",
+   "label": "Pizza 🍕",
+   "capacity_ml": 219,
+   "inner_mm": 67.8
+  },
+  {
+   "slug": "burger",
+   "label": "Burger 🍔",
+   "capacity_ml": 247,
+   "inner_mm": 78.4
+  },
+  {
+   "slug": "rocket",
+   "label": "Rocket 🚀",
+   "capacity_ml": 120,
+   "inner_mm": 32.3
+  },
+  {
+   "slug": "star",
+   "label": "Star ⭐",
+   "capacity_ml": 116,
+   "inner_mm": 45.9
+  },
+  {
+   "slug": "heart",
+   "label": "Heart ❤️",
+   "capacity_ml": 175,
+   "inner_mm": 54.7
+  },
+  {
+   "slug": "mech-arm",
+   "label": "Mechanical arm 🦾",
+   "capacity_ml": 136,
+   "inner_mm": 40.8
+  },
+  {
+   "slug": "drumstick",
+   "label": "Drumstick 🍗",
+   "capacity_ml": 109,
+   "inner_mm": 48.0
+  },
+  {
+   "slug": "ox",
+   "label": "Ox 🐂",
+   "capacity_ml": 113,
+   "inner_mm": 36.4
+  },
+  {
+   "slug": "lion",
+   "label": "Lion 🦁",
+   "capacity_ml": 225,
+   "inner_mm": 78.1
+  },
+  {
+   "slug": "kettlebell",
+   "label": "Kettlebell (SVG)",
+   "capacity_ml": 274,
+   "inner_mm": 80.5
+  },
+  {
+   "slug": "barbell",
+   "label": "Barbell (SVG)",
+   "capacity_ml": 36,
+   "inner_mm": 15.0
+  }
+ ]
+}

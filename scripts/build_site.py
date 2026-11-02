@@ -45,21 +45,29 @@ def main() -> int:
     out = ROOT / "docs" / "models"
     out.mkdir(parents=True, exist_ok=True)
     manifest = []
+    failed: list[str] = []
     for slug, label, src in MODELS:
         path = ROOT / src
         try:
             geom = load_icon(str(path) if path.exists() else src)
             geom = normalize(geom, a.width, smooth=1.0)
             r = make_box(geom, BoxParams(height=a.height))
-        except ValueError as e:
-            print(f"skip {slug}: {e}", file=sys.stderr)
+        except (ValueError, OSError) as e:
+            print(f"FAILED {slug}: {e}", file=sys.stderr)
+            failed.append(slug)
             continue
+        for w in r.warnings:
+            print(f"  {slug}: {w}", file=sys.stderr)
         r.body.export(out / f"{slug}_box.stl")
         r.lid.export(out / f"{slug}_lid.stl")
         manifest.append({"slug": slug, "label": label, "capacity_ml": round(r.capacity_ml),
                          "inner_mm": round(r.inner_diameter, 1)})
         print(f"{slug}: {r.capacity_ml:.0f} ml")
-    (out / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=1))
+    if failed:  # don't publish a manifest that silently drops models
+        print(f"error: {len(failed)} model(s) failed ({', '.join(failed)}); manifest not written", file=sys.stderr)
+        return 1
+    data = {"params": {"width": a.width, "height": a.height, "wall": BoxParams().wall}, "models": manifest}
+    (out / "manifest.json").write_text(json.dumps(data, ensure_ascii=False, indent=1))
     return 0
 
 
