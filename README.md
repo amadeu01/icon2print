@@ -39,6 +39,12 @@ icon2print box 🦄 -o out --width 90 --height 40 --smooth 1   # -> unicorn_face
 scripts/emoji_boxes.sh out/emoji                              # batch: unicorn, steak, biceps, gorilla, shark...
 ```
 
+**Apple style:** on a Mac, point at Apple's font (Apple's glyphs are proprietary, so the repo doesn't ship them):
+
+```bash
+icon2print box 🦄 -o out --emoji-font "/System/Library/Fonts/Apple Color Emoji.ttc"
+```
+
 Chunky silhouettes (🥩 🍗 ❤️ 🦄 🍔) hold the most chalk; thin-legged animals have less room.
 
 ### Box options

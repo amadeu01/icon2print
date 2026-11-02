@@ -108,14 +108,17 @@ def load_emoji(text: str, font: str | None = None, **kw) -> BaseGeometry:
     f = None
     for c in candidates:
         if c and Path(c).exists():
-            try:
-                f = ImageFont.truetype(c, 109)  # Noto/Apple bitmap fonts need fixed sizes
+            for size in (109, 160):  # bitmap emoji fonts need a fixed size: Noto 109, Apple 160
+                try:
+                    f = ImageFont.truetype(c, size)
+                    break
+                except OSError:
+                    continue
+            if f:
                 break
-            except OSError:
-                continue
     if f is None:
         raise ValueError("No colour emoji font found; pass --emoji-font /path/to/font.ttf or use an SVG/PNG.")
-    img = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    img = Image.new("RGBA", (300, 300), (0, 0, 0, 0))
     ImageDraw.Draw(img).text((20, 20), text, font=f, embedded_color=True)
     bbox = img.getchannel("A").getbbox()
     if not bbox:
