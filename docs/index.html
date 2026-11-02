@@ -61,11 +61,11 @@
   (function () {
     var msg = document.getElementById('msg');
     if (location.protocol === 'file:') {
-      msg.textContent = 'This page must be served over http(s). Run: python3 -m http.server -d docs  then open http://localhost:8000';
+      msg.textContent = 'This page must be served over http(s). From the repo root run: python3 -m http.server -d docs , then open http://localhost:8000';
       return;
     }
     setTimeout(function () {
-      if (!window.__viewerReady) msg.textContent = 'The 3D viewer did not start. Open the browser console for details, or download the STL files from the repository (docs/models).';
+      if (!window.__viewerStarted) { msg.textContent = 'The 3D viewer did not start. Open the browser console for details, or download the STL files from the repository (docs/models).'; msg.style.display = 'grid'; }
     }, 8000);
   })();
 </script>
@@ -74,6 +74,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { STLLoader } from './vendor/STLLoader.js';
+window.__viewerStarted = true;  // all imports loaded; the guard's timeout only reports a module that never ran
 
 const $ = (s) => document.querySelector(s);
 const view = $('#view'), msg = $('#msg');
@@ -142,7 +143,6 @@ async function show() {
       controls.update();
     }
     msg.style.display = 'none';
-    window.__viewerReady = true;
     $('#meta').textContent = `${current.capacity_ml} ml · widest inner circle ${current.inner_mm} mm`;
     const dl = $('#dl'); dl.replaceChildren();
     ['box', 'lid'].forEach((k, i) => {
