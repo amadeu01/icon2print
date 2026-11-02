@@ -28,6 +28,9 @@ def _common(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--invert", action="store_true", help="raster: treat light pixels as solid")
 
 
+d_wall = BoxParams().wall
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="icon2print", description="2D icon -> 3D printable STL")
     ap.add_argument("--version", action="version", version=__version__)
@@ -41,7 +44,11 @@ def main(argv: list[str] | None = None) -> int:
     _common(b)
     d = BoxParams()
     b.add_argument("--height", type=float, default=d.height, help="box height in mm (default 40)")
-    b.add_argument("--wall", type=float, default=d.wall)
+    b.add_argument("--lid", choices=["plug", "slide"], default="plug",
+                   help="lid style: friction-fit plug, or dovetail sliding lid (slides out towards +X)")
+    b.add_argument("--wall", type=float, default=None, help="wall thickness (default 2, or 2.4 for --lid slide)")
+    b.add_argument("--lip", type=float, default=d.lip, help="slide lid: rail depth into the wall")
+    b.add_argument("--detent", type=float, default=d.detent, help="slide lid: click bump height, 0 = none")
     b.add_argument("--floor", type=float, default=d.floor)
     b.add_argument("--lid-height", type=float, default=d.lid_height)
     b.add_argument("--plug-height", type=float, default=d.plug_height)
@@ -63,8 +70,9 @@ def main(argv: list[str] | None = None) -> int:
             extrude(geom, a.height).export(out)
             print(f"Wrote {out}")
         else:
-            params = BoxParams(a.height, a.wall, a.floor, a.lid_height, a.plug_height,
-                               a.clearance, fill_holes=not a.keep_holes)
+            wall = a.wall if a.wall is not None else (2.4 if a.lid == "slide" else d_wall)
+            params = BoxParams(a.height, wall, a.floor, a.lid_height, a.plug_height, a.clearance,
+                               fill_holes=not a.keep_holes, lid_style=a.lid, lip=a.lip, detent=a.detent)
             r = make_box(geom, params)
             out = Path(a.out)
             out.mkdir(parents=True, exist_ok=True)
