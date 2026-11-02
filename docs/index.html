@@ -56,11 +56,25 @@
   </section>
 </main>
 
+<script>
+  // Plain (non-module) guard: module scripts silently do nothing on file:// or if the vendored files fail to load.
+  (function () {
+    var msg = document.getElementById('msg');
+    if (location.protocol === 'file:') {
+      msg.textContent = 'This page must be served over http(s). From the repo root run: python3 -m http.server -d docs , then open http://localhost:8000';
+      return;
+    }
+    setTimeout(function () {
+      if (!window.__viewerStarted) { msg.textContent = 'The 3D viewer did not start. Open the browser console for details, or download the STL files from the repository (docs/models).'; msg.style.display = 'grid'; }
+    }, 8000);
+  })();
+</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { STLLoader } from './vendor/STLLoader.js';
+window.__viewerStarted = true;  // all imports loaded; the guard's timeout only reports a module that never ran
 
 const $ = (s) => document.querySelector(s);
 const view = $('#view'), msg = $('#msg');
@@ -165,7 +179,7 @@ controls.autoRotate = !reduce; controls.autoRotateSpeed = 2;
     const manifest = await (await fetch('models/manifest.json')).json();
     models = manifest.models;
     $('#params').textContent = `${manifest.params.width} mm wide, ${manifest.params.height} mm tall, ${manifest.params.wall} mm walls`;
-  } catch (e) { msg.textContent = 'Could not load model list.'; return; }
+  } catch (e) { msg.textContent = `Could not load model list (${e.message}).`; msg.style.display = 'grid'; return; }
   const list = $('#list');
   for (const m of models) {
     const b = document.createElement('button');
