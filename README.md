@@ -4,6 +4,9 @@ Turn a flat 2D icon (SVG or PNG/JPG) into 3D-printable STL files. The headline f
 **icon-shaped chalk boxes** (magnesium carbonate) with a matching friction-fit lid, so a
 powerlifter can carry chalk in a kettlebell, barbell, plate… or any logo-shaped container.
 
+**Live 3D viewer:** https://amadeu01.github.io/icon2print/ (rotate and download the STLs in your browser).
+Rebuild the models with `python scripts/build_site.py`; the page itself is static (`docs/`, three.js vendored).
+
 ## Install
 
 ```bash
