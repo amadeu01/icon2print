@@ -56,6 +56,19 @@
   </section>
 </main>
 
+<script>
+  // Plain (non-module) guard: module scripts silently do nothing on file:// or if the vendored files fail to load.
+  (function () {
+    var msg = document.getElementById('msg');
+    if (location.protocol === 'file:') {
+      msg.textContent = 'This page must be served over http(s). Run: python3 -m http.server -d docs  then open http://localhost:8000';
+      return;
+    }
+    setTimeout(function () {
+      if (!window.__viewerReady) msg.textContent = 'The 3D viewer did not start. Open the browser console for details, or download the STL files from the repository (docs/models).';
+    }, 8000);
+  })();
+</script>
 <script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
 <script type="module">
 import * as THREE from 'three';
@@ -129,6 +142,7 @@ async function show() {
       controls.update();
     }
     msg.style.display = 'none';
+    window.__viewerReady = true;
     $('#meta').textContent = `${current.capacity_ml} ml · widest inner circle ${current.inner_mm} mm`;
     const dl = $('#dl'); dl.replaceChildren();
     ['box', 'lid'].forEach((k, i) => {
@@ -165,7 +179,7 @@ controls.autoRotate = !reduce; controls.autoRotateSpeed = 2;
     const manifest = await (await fetch('models/manifest.json')).json();
     models = manifest.models;
     $('#params').textContent = `${manifest.params.width} mm wide, ${manifest.params.height} mm tall, ${manifest.params.wall} mm walls`;
-  } catch (e) { msg.textContent = 'Could not load model list.'; return; }
+  } catch (e) { msg.textContent = `Could not load model list (${e.message}).`; msg.style.display = 'grid'; return; }
   const list = $('#list');
   for (const m of models) {
     const b = document.createElement('button');
