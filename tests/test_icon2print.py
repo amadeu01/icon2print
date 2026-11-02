@@ -113,3 +113,17 @@ def test_slide_wall_too_thin():
 
 def test_cli_slide(tmp_path):
     assert main(["box", str(EX / "kettlebell.svg"), "-o", str(tmp_path), "--lid", "slide"]) == 0
+
+
+def test_slide_capacity_excludes_lid_space():
+    g = box(0, 0, 80, 80)
+    plug = make_box(g, BoxParams(height=40, wall=2.4))
+    slide = make_box(g, BoxParams(height=40, wall=2.4, lid_style="slide"))
+    assert slide.capacity_ml < plug.capacity_ml
+    assert slide.lid_z is not None and 30 < slide.lid_z < 38
+
+
+@pytest.mark.parametrize("kw", [dict(lip=0), dict(lip=-1), dict(clearance=-0.1), dict(detent=3), dict(height=10)])
+def test_slide_bad_params_raise_valueerror(kw):
+    with pytest.raises(ValueError):
+        make_box(box(0, 0, 80, 80), BoxParams(wall=2.4, lid_style="slide", **{"height": 40, **kw}))

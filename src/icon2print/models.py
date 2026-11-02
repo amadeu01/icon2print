@@ -49,7 +49,7 @@ class BoxParams:
     fill_holes: bool = True     # icon holes would leak chalk; seal them by default
     lid_style: str = "plug"     # "plug" (friction-fit) or "slide" (dovetail rail, slides out towards +X)
     lip: float = 1.0            # slide: how far the lid's rail reaches into the wall
-    detent: float = 0.5         # slide: height of the click bump (0 disables)
+    detent: float = 0.3         # slide: height of the click bump (0 disables); >0.4 makes it an interference fit
     layer: float = 0.2          # slide: slice height used to build the 45 degree dovetail
 
 
@@ -60,6 +60,7 @@ class BoxResult:
     capacity_ml: float
     inner_diameter: float       # widest circle that fits in the cavity (mm)
     warnings: list[str] = field(default_factory=list)
+    lid_z: float | None = None  # slide: z of the lid's underside when closed (for assembly previews)
 
 
 def make_box(outline: BaseGeometry, p: BoxParams = BoxParams()) -> BoxResult:
@@ -75,15 +76,12 @@ def make_box(outline: BaseGeometry, p: BoxParams = BoxParams()) -> BoxResult:
         parts.sort(key=lambda q: q.area, reverse=True)
         warns.append(f"Icon has {len(parts)} separate parts; the box uses the largest only.")
     outer = parts[0]
-    if p.fill_holes and outer.interiors:
-        outer = Polygon(outer.exterior)
-
     if p.lid_style not in ("plug", "slide"):
         raise ValueError("lid_style must be 'plug' or 'slide'.")
-    if p.lid_style == "slide":
-        p = replace(p, fill_holes=True)
-        if len(_polygons(outline)) and outer.interiors:
-            outer = Polygon(outer.exterior)
+    if p.lid_style == "slide" and not p.fill_holes:
+        warns.append("--keep-holes is ignored for sliding lids (holes would leak chalk).")
+    if (p.fill_holes or p.lid_style == "slide") and outer.interiors:
+        outer = Polygon(outer.exterior)
     cavity_depth = p.height - p.floor
     if cavity_depth <= 0:
         raise ValueError("height must be larger than floor.")
@@ -101,7 +99,8 @@ def make_box(outline: BaseGeometry, p: BoxParams = BoxParams()) -> BoxResult:
     cavity = unary_union(cav_parts)
 
     if p.lid_style == "slide":
-        body, lid = _slide_parts(outer, cavity, p, warns)
+        body, lid, lid_z = _slide_parts(outer, cavity, p, warns)
+        cavity_depth = lid_z - p.floor  # the lid and its roof occupy the top of the box
     else:
         plug = cavity.buffer(-p.clearance, join_style="round")
         if plug.is_empty:
@@ -114,7 +113,7 @@ def make_box(outline: BaseGeometry, p: BoxParams = BoxParams()) -> BoxResult:
     capacity = cavity.area * cavity_depth / 1000.0
     if not (body.is_watertight and lid.is_watertight):
         warns.append("A mesh is not watertight; check it in your slicer before printing.")
-    return BoxResult(body, lid, capacity, inner_d, warns)
+    return BoxResult(body, lid, capacity, inner_d, warns, lid_z if p.lid_style == "slide" else None)
 
 
 def _inscribed(poly: Polygon) -> float:
@@ -156,6 +155,8 @@ def _slide_parts(outer: Polygon, cavity: BaseGeometry, p: BoxParams, warns: list
     cavity edge, so the box roof above the lid is a 45 degree overhang and prints without supports.
     """
     lip, clr, dz = p.lip, p.clearance, p.layer
+    if lip <= 0 or dz <= 0 or clr < 0 or p.detent < 0:
+        raise ValueError("Sliding lid needs lip > 0, layer > 0, clearance >= 0 and detent >= 0.")
     h_s = p.lid_height - lip                       # height of the vertical part of the lid rail
     if h_s < 2 * dz:
         raise ValueError("lid_height must exceed lip by at least 0.4 mm for a sliding lid.")
@@ -168,8 +169,10 @@ def _slide_parts(outer: Polygon, cavity: BaseGeometry, p: BoxParams, warns: list
     n_g = math.ceil((lip + clr) / step + 0.5)
     top_zone = h_s + n_g * step
     g0 = p.height - top_zone                       # groove floor (lid rests here)
-    if g0 <= p.floor + 2:
-        raise ValueError("Box too short for a sliding lid; increase height.")
+    if g0 < p.floor + 5:
+        raise ValueError(f"Box too short for a sliding lid (only {g0 - p.floor:.1f} mm of cavity); use --height {p.floor + 5 + top_zone:.0f} or more.")
+    if p.detent > h_s - 0.7:
+        raise ValueError(f"detent too large for this lid; use <= {max(h_s - 0.7, 0):.1f} mm.")
 
     # --- lid: bottom on the bed, rail first, chamfer on top
     lid_slices = [(cavity.buffer(lip, join_style="round"), h_s)]
@@ -191,18 +194,20 @@ def _slide_parts(outer: Polygon, cavity: BaseGeometry, p: BoxParams, warns: list
     if p.detent > 0:  # click bump on the groove floor + dimple under the lid, at the top and bottom of the cavity
         ledge = cavity.buffer(lip, join_style="round").difference(cavity)
         ext = max(_polygons(cavity), key=lambda q: q.area).exterior.coords
-        for pt, sgn in ((max(ext, key=lambda c: c[1]), 1), (min(ext, key=lambda c: c[1]), -1)):
-            x, y = pt[0], pt[1] + sgn * lip / 2
-            if not ledge.contains(Point(x, y)):
-                warns.append("Could not place the click bump on this shape; the lid is friction-only.")
-                break
-            bump = trimesh.creation.cylinder(radius=0.5, height=p.detent + 0.01, sections=16)
-            bump.apply_translation([x, y, g0 - 0.01 + (p.detent + 0.01) / 2])
-            body = _union_all([body, bump])
-            dimple = trimesh.creation.cylinder(radius=0.5 + clr, height=p.detent + 0.2, sections=16)
-            dimple.apply_translation([x, y, (p.detent + 0.2) / 2 - 0.1])
-            lid = trimesh.boolean.difference([lid, dimple], engine="manifold")
-    return body, lid
+        r = min(0.5, lip / 2)
+        spots = [(pt[0], pt[1] + sgn * lip / 2) for pt, sgn in
+                 ((max(ext, key=lambda c: c[1]), 1), (min(ext, key=lambda c: c[1]), -1))]
+        if all(ledge.buffer(0.05).contains(Point(x, y).buffer(r)) for x, y in spots):  # both or none, so the lid sits level
+            for x, y in spots:
+                bump = trimesh.creation.cylinder(radius=r, height=p.detent + 0.01, sections=16)
+                bump.apply_translation([x, y, g0 - 0.01 + (p.detent + 0.01) / 2])
+                body = _union_all([body, bump])
+                dimple = trimesh.creation.cylinder(radius=r + clr, height=p.detent + 0.2, sections=16)
+                dimple.apply_translation([x, y, (p.detent + 0.2) / 2 - 0.1])
+                lid = trimesh.boolean.difference([lid, dimple], engine="manifold")
+        else:
+            warns.append("Could not place the click bump on this shape; the lid is friction-only.")
+    return body, lid, g0
 
 
 def _union_all(meshes: list[trimesh.Trimesh]) -> trimesh.Trimesh:
