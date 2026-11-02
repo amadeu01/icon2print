@@ -29,6 +29,18 @@ icon2print extrude examples/barbell.svg -o out/barbell_plaque.stl --width 80 --h
 The tool prints the box capacity (ml) and the widest circle that fits inside the cavity, so you
 can check that your chalk block fits (measure your block, and keep the inner diameter larger).
 
+### Emoji boxes
+
+Pass an emoji instead of a file; its silhouette becomes the box shape (needs a colour emoji font,
+e.g. `fonts-noto-color-emoji`; use `--emoji-font` for another font):
+
+```bash
+icon2print box 🦄 -o out --width 90 --height 40 --smooth 1   # -> unicorn_face_box.stl / _lid.stl
+scripts/emoji_boxes.sh out/emoji                              # batch: unicorn, steak, biceps, gorilla, shark...
+```
+
+Chunky silhouettes (🥩 🍗 ❤️ 🦄 🍔) hold the most chalk; thin-legged animals have less room.
+
 ### Box options
 
 | Option | Default | Meaning |
@@ -47,6 +59,7 @@ Transparent PNGs use the alpha channel.
 
 ## Icon tips
 
+- Emojis and PNGs are traced from their silhouette (alpha), so colours don't matter.
 - Use a **single-colour, filled** silhouette. Stroke-only paths are ignored; convert strokes to outlines first.
 - Overlapping shapes are merged; shapes nested inside others become holes (even-odd rule).
 - Chunky shapes make good boxes. Thin bars (like the barbell's bar) leave little inner space; thin

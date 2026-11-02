@@ -74,3 +74,11 @@ def test_raster_roundtrip(tmp_path):
     im.save(f)
     g = normalize(load_icon(f), 50)
     assert g.area == pytest.approx(3.14159 * 25**2, rel=0.05)
+
+
+def test_emoji_box(tmp_path):
+    from icon2print.outline import EMOJI_FONT_CANDIDATES
+    if not any(Path(f).exists() for f in EMOJI_FONT_CANDIDATES):
+        pytest.skip("no colour emoji font installed")
+    assert main(["box", "🦄", "-o", str(tmp_path), "-w", "90"]) == 0
+    assert (tmp_path / "unicorn_face_box.stl").exists()

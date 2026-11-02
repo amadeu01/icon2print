@@ -6,15 +6,25 @@ from pathlib import Path
 
 from . import __version__
 from .models import BoxParams, extrude, make_box
-from .outline import load_icon, normalize
+import unicodedata
+
+from .outline import is_emoji, load_icon, normalize
+
+
+def _stem(icon: str) -> str:
+    if is_emoji(icon):
+        names = [unicodedata.name(c, "").lower().replace(" ", "_") for c in icon if ord(c) > 0x2000 and unicodedata.name(c, "")]
+        return "_".join(n for n in names if "variation" not in n) or "emoji"
+    return Path(icon).stem
 
 
 def _common(sp: argparse.ArgumentParser) -> None:
-    sp.add_argument("icon", help="SVG or raster (PNG/JPG/...) icon")
+    sp.add_argument("icon", help="SVG, raster (PNG/JPG/...) file, or an emoji character such as 🦄")
     sp.add_argument("-o", "--out", required=True, help="output file (extrude) or directory (box)")
     sp.add_argument("-w", "--width", type=float, default=80.0, help="icon width in mm (default 80)")
     sp.add_argument("--smooth", type=float, default=0.0, help="round off details smaller than this many mm")
     sp.add_argument("--threshold", type=float, default=0.5, help="raster tracing threshold 0..1")
+    sp.add_argument("--emoji-font", help="path to a colour emoji font (for emoji input)")
     sp.add_argument("--invert", action="store_true", help="raster: treat light pixels as solid")
 
 
@@ -40,8 +50,10 @@ def main(argv: list[str] | None = None) -> int:
 
     a = ap.parse_args(argv)
     raster_kw = {"threshold": a.threshold, "invert": a.invert}
+    if a.emoji_font:
+        raster_kw["font"] = a.emoji_font
     try:
-        geom = load_icon(a.icon, **(raster_kw if Path(a.icon).suffix.lower() != ".svg" else {}))
+        geom = load_icon(a.icon, **(raster_kw if not a.icon.lower().endswith(".svg") else {}))
         geom = normalize(geom, a.width, a.smooth)
         minx, miny, maxx, maxy = geom.bounds
         print(f"Icon size: {maxx - minx:.1f} x {maxy - miny:.1f} mm")
@@ -56,7 +68,7 @@ def main(argv: list[str] | None = None) -> int:
             r = make_box(geom, params)
             out = Path(a.out)
             out.mkdir(parents=True, exist_ok=True)
-            stem = Path(a.icon).stem
+            stem = _stem(a.icon)
             r.body.export(out / f"{stem}_box.stl")
             r.lid.export(out / f"{stem}_lid.stl")
             print(f"Wrote {out / (stem + '_box.stl')} and {out / (stem + '_lid.stl')}")

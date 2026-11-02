@@ -73,7 +73,8 @@ def load_raster(path: str | Path, threshold: float = 0.5, invert: bool = False) 
     from PIL import Image
     from skimage import measure
 
-    img = Image.open(path).convert("RGBA")
+    img = path if isinstance(path, Image.Image) else Image.open(path)
+    img = img.convert("RGBA")
     a = np.asarray(img, dtype=float) / 255.0
     if a[..., 3].min() < 0.99:  # real transparency: opaque = solid
         mask = a[..., 3]
@@ -87,7 +88,47 @@ def load_raster(path: str | Path, threshold: float = 0.5, invert: bool = False) 
     return geom.simplify(0.35, preserve_topology=True)
 
 
+EMOJI_FONT_CANDIDATES = [
+    "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",
+    "/usr/share/fonts/noto/NotoColorEmoji.ttf",
+    "/System/Library/Fonts/Apple Color Emoji.ttc",
+    "C:/Windows/Fonts/seguiemj.ttf",
+]
+
+
+def is_emoji(text: str) -> bool:
+    return bool(text) and not Path(text).exists() and not Path(text).suffix and any(ord(c) > 0x2000 for c in text)
+
+
+def load_emoji(text: str, font: str | None = None, **kw) -> BaseGeometry:
+    """Render an emoji with a colour emoji font and trace its silhouette."""
+    from PIL import Image, ImageDraw, ImageFont
+
+    candidates = [font] if font else EMOJI_FONT_CANDIDATES
+    f = None
+    for c in candidates:
+        if c and Path(c).exists():
+            try:
+                f = ImageFont.truetype(c, 109)  # Noto/Apple bitmap fonts need fixed sizes
+                break
+            except OSError:
+                continue
+    if f is None:
+        raise ValueError("No colour emoji font found; pass --emoji-font /path/to/font.ttf or use an SVG/PNG.")
+    img = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    ImageDraw.Draw(img).text((20, 20), text, font=f, embedded_color=True)
+    bbox = img.getchannel("A").getbbox()
+    if not bbox:
+        raise ValueError(f"Font has no glyph for {text!r}.")
+    img = img.crop(bbox).convert("RGBA")
+    img = img.resize((img.width * 4, img.height * 4), Image.LANCZOS)  # smoother contours
+    kw.setdefault("threshold", 0.5)
+    return load_raster(img, **kw).simplify(0.8, preserve_topology=True)
+
+
 def load_icon(path: str | Path, **kw) -> BaseGeometry:
+    if isinstance(path, str) and is_emoji(path):
+        return load_emoji(path, **kw)
     p = Path(path)
     ext = p.suffix.lower()
     if ext == ".svg":
