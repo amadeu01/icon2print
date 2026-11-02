@@ -2,128 +2,269 @@
  "params": {
   "width": 90,
   "height": 40,
-  "wall": 2.0
+  "wall": 2.4,
+  "lid_height": 3.0
  },
  "models": [
   {
    "slug": "unicorn",
    "label": "Unicorn 🦄",
-   "capacity_ml": 165,
-   "inner_mm": 47.3
+   "plug": {
+    "capacity_ml": 159,
+    "inner_mm": 46.5
+   },
+   "slide": {
+    "capacity_ml": 145,
+    "inner_mm": 46.5,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "steak",
    "label": "Steak 🥩",
-   "capacity_ml": 189,
-   "inner_mm": 62.9
+   "plug": {
+    "capacity_ml": 185,
+    "inner_mm": 62.1
+   },
+   "slide": {
+    "capacity_ml": 168,
+    "inner_mm": 62.1,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "biceps",
    "label": "Flexed biceps 💪",
-   "capacity_ml": 184,
-   "inner_mm": 52.2
+   "plug": {
+    "capacity_ml": 178,
+    "inner_mm": 51.4
+   },
+   "slide": {
+    "capacity_ml": 162,
+    "inner_mm": 51.4,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "fire",
    "label": "Fire 🔥",
-   "capacity_ml": 221,
-   "inner_mm": 65.5
+   "plug": {
+    "capacity_ml": 215,
+    "inner_mm": 64.8
+   },
+   "slide": {
+    "capacity_ml": 196,
+    "inner_mm": 64.8,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "gorilla",
    "label": "Gorilla 🦍",
-   "capacity_ml": 192,
-   "inner_mm": 41.1
+   "plug": {
+    "capacity_ml": 185,
+    "inner_mm": 40.3
+   },
+   "slide": {
+    "capacity_ml": 169,
+    "inner_mm": 40.3,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "bear",
    "label": "Bear 🐻",
-   "capacity_ml": 223,
-   "inner_mm": 78.2
+   "plug": {
+    "capacity_ml": 219,
+    "inner_mm": 77.4
+   },
+   "slide": {
+    "capacity_ml": 199,
+    "inner_mm": 77.4,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "t-rex",
    "label": "T-Rex 🦖",
-   "capacity_ml": 94,
-   "inner_mm": 33.3
+   "plug": {
+    "capacity_ml": 88,
+    "inner_mm": 32.5
+   },
+   "slide": {
+    "capacity_ml": 80,
+    "inner_mm": 32.5,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "shark",
    "label": "Shark 🦈",
-   "capacity_ml": 113,
-   "inner_mm": 33.0
+   "plug": {
+    "capacity_ml": 107,
+    "inner_mm": 32.2
+   },
+   "slide": {
+    "capacity_ml": 98,
+    "inner_mm": 32.2,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "octopus",
    "label": "Octopus 🐙",
-   "capacity_ml": 129,
-   "inner_mm": 47.2
+   "plug": {
+    "capacity_ml": 122,
+    "inner_mm": 46.4
+   },
+   "slide": {
+    "capacity_ml": 111,
+    "inner_mm": 46.4,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "pizza",
    "label": "Pizza 🍕",
-   "capacity_ml": 219,
-   "inner_mm": 67.8
+   "plug": {
+    "capacity_ml": 215,
+    "inner_mm": 67.0
+   },
+   "slide": {
+    "capacity_ml": 195,
+    "inner_mm": 67.0,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "burger",
    "label": "Burger 🍔",
-   "capacity_ml": 247,
-   "inner_mm": 78.4
+   "plug": {
+    "capacity_ml": 242,
+    "inner_mm": 77.6
+   },
+   "slide": {
+    "capacity_ml": 220,
+    "inner_mm": 77.6,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "rocket",
    "label": "Rocket 🚀",
-   "capacity_ml": 120,
-   "inner_mm": 32.3
+   "plug": {
+    "capacity_ml": 115,
+    "inner_mm": 31.4
+   },
+   "slide": {
+    "capacity_ml": 105,
+    "inner_mm": 31.4,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "star",
    "label": "Star ⭐",
-   "capacity_ml": 116,
-   "inner_mm": 45.9
+   "plug": {
+    "capacity_ml": 112,
+    "inner_mm": 45.1
+   },
+   "slide": {
+    "capacity_ml": 102,
+    "inner_mm": 45.1,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "heart",
    "label": "Heart ❤️",
-   "capacity_ml": 175,
-   "inner_mm": 54.7
+   "plug": {
+    "capacity_ml": 171,
+    "inner_mm": 53.9
+   },
+   "slide": {
+    "capacity_ml": 155,
+    "inner_mm": 53.9,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "mech-arm",
    "label": "Mechanical arm 🦾",
-   "capacity_ml": 136,
-   "inner_mm": 40.8
+   "plug": {
+    "capacity_ml": 131,
+    "inner_mm": 40.1
+   },
+   "slide": {
+    "capacity_ml": 119,
+    "inner_mm": 40.1,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "drumstick",
    "label": "Drumstick 🍗",
-   "capacity_ml": 109,
-   "inner_mm": 48.0
+   "plug": {
+    "capacity_ml": 105,
+    "inner_mm": 47.2
+   },
+   "slide": {
+    "capacity_ml": 95,
+    "inner_mm": 47.2,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "ox",
    "label": "Ox 🐂",
-   "capacity_ml": 113,
-   "inner_mm": 36.4
+   "plug": {
+    "capacity_ml": 108,
+    "inner_mm": 35.6
+   },
+   "slide": {
+    "capacity_ml": 98,
+    "inner_mm": 35.6,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "lion",
    "label": "Lion 🦁",
-   "capacity_ml": 225,
-   "inner_mm": 78.1
+   "plug": {
+    "capacity_ml": 220,
+    "inner_mm": 77.3
+   },
+   "slide": {
+    "capacity_ml": 200,
+    "inner_mm": 77.3,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "kettlebell",
    "label": "Kettlebell (SVG)",
-   "capacity_ml": 274,
-   "inner_mm": 80.5
+   "plug": {
+    "capacity_ml": 269,
+    "inner_mm": 79.7
+   },
+   "slide": {
+    "capacity_ml": 245,
+    "inner_mm": 79.7,
+    "lid_z": 36.6
+   }
   },
   {
    "slug": "barbell",
    "label": "Barbell (SVG)",
-   "capacity_ml": 36,
-   "inner_mm": 15.0
+   "plug": {
+    "capacity_ml": 32,
+    "inner_mm": 14.2
+   },
+   "slide": {
+    "capacity_ml": 29,
+    "inner_mm": 14.2,
+    "lid_z": 36.6
+   }
   }
  ]
 }
