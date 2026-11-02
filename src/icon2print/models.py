@@ -107,7 +107,12 @@ def make_box(outline: BaseGeometry, p: BoxParams = BoxParams()) -> BoxResult:
             raise ValueError("Clearance too large for this cavity.")
         walls = outer.difference(cavity)
         body = _union(extrude(outer, p.floor), extrude(walls, cavity_depth, z0=p.floor))
-        lid = _union(extrude(outer, p.lid_height), extrude(plug, p.plug_height, z0=p.lid_height - 0.01))
+        # The lid is turned over to close the box, which mirrors it left-to-right, so it is built
+        # mirrored about the icon's vertical centre line; flipped over it then matches the cavity.
+        cx = (outer.bounds[0] + outer.bounds[2]) / 2
+        mirror = lambda g: affinity.scale(g, xfact=-1, origin=(cx, 0))
+        lid = _union(extrude(mirror(outer), p.lid_height),
+                     extrude(mirror(plug), p.plug_height, z0=p.lid_height - 0.01))
 
     inner_d = max(_inscribed(c) for c in _polygons(cavity))
     capacity = cavity.area * cavity_depth / 1000.0

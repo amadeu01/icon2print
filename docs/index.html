@@ -157,17 +157,20 @@ const VIEWS = {
   back:   { dir: [0, 1, 0],   up: [0, 0, 1] },
   left:   { dir: [-1, 0, 0],  up: [0, 0, 1] },
   right:  { dir: [1, 0, 0],   up: [0, 0, 1] },
-  top:    { dir: [0, 0, 1],   up: [0, 1, 0] },
-  bottom: { dir: [0, 0, -1],  up: [0, 1, 0] },
+  top:    { dir: [0, -0.02, 1],  up: [0, 0, 1] },   // tiny offset instead of up=Y keeps OrbitControls' axis consistent
+  bottom: { dir: [0, 0.02, -1],  up: [0, 0, 1] },
 };
 let sceneSize = new THREE.Vector3(100, 100, 40);
 function setView(name, animate = true) {
   const v = VIEWS[name]; if (!v) return;
   viewName = name;
   document.querySelectorAll('#viewSeg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.view === name));
-  const r = Math.max(sceneSize.x, sceneSize.y, sceneSize.z);
-  const dist = (name === 'iso' ? r * 1.9 : r * 1.7) * (part === 'assembled' ? 1.3 : 1);  // leave room for the lid to slide out
-  const target = new THREE.Vector3(0, 0, sceneSize.z / 2);
+  const ext = sceneSize.clone();
+  if (part === 'assembled' && lidMesh) { if (style === 'slide') ext.x += (boxSize.x + 12) * 0.8; else ext.z += 45; }  // room for the Open slider
+  const r = Math.max(ext.x, ext.y, ext.z);
+  const dist = name === 'iso' ? r * 1.9 : r * 1.7;
+  const lift = (part === 'assembled' && lidMesh && style !== 'slide') ? 45 : 0;  // plug lid rises when opened
+  const target = new THREE.Vector3(0, 0, (sceneSize.z + lift) / 2);
   const dir = new THREE.Vector3(...v.dir).normalize();
   const toPos = target.clone().addScaledVector(dir, dist);
   const toUp = new THREE.Vector3(...v.up);
@@ -194,10 +197,11 @@ let animToken = 0;
 
 // ---- assembling
 function flippedLid(lidGeo, key, bbox) {
-  // plug lid: rotate 180 deg about the X axis so the plug points down into the box, plate on top
+  // plug lid: rotate 180 deg so the plug points down into the box, plate on top
   if (!flipCache.has(key)) {
     const H = bbox.max.z, t = manifest.params.lid_height;
-    const m = new THREE.Matrix4().set(1, 0, 0, 0,  0, -1, 0, bbox.min.y + bbox.max.y,  0, 0, -1, H + t,  0, 0, 0, 1);
+    // turn the lid over about the vertical (Y) axis: the lid is printed mirrored so it then matches the cavity
+    const m = new THREE.Matrix4().set(-1, 0, 0, bbox.min.x + bbox.max.x,  0, 1, 0, 0,  0, 0, -1, H + t,  0, 0, 0, 1);
     flipCache.set(key, lidGeo.clone().applyMatrix4(m));
   }
   return flipCache.get(key);
@@ -233,7 +237,7 @@ async function show() {
       items.push(m);
     } else if (part === 'assembled') {
       const m = style === 'slide' ? mesh(lidGeo, 'lid') : mesh(flippedLid(lidGeo, `${current.slug}_${style}`, bb), 'lid');
-      lidBase = new THREE.Vector3(0, 0, style === 'slide' ? info.lid_z : 0);
+      lidBase = new THREE.Vector3(0, 0, style === 'slide' ? (info.lid_z ?? 0) : 0);
       lidMesh = m;
       items.push(m);
     }
@@ -244,7 +248,7 @@ async function show() {
     sceneSize = gb.getSize(new THREE.Vector3());
     applyOpen();
     $('#openRow').hidden = part !== 'assembled';
-    if (framedFor !== current.slug) { framedFor = current.slug; setView(viewName, false); }  // keep the view when only toggling options
+    if (framedFor !== current.slug) { framedFor = current.slug; animToken++; setView(viewName, false); }  // keep the view when only toggling options
     msg.style.display = 'none';
     $('#meta').textContent = `${info.capacity_ml} ml · widest inner circle ${info.inner_mm} mm`;
     const dl = $('#dl'); dl.replaceChildren();
@@ -256,6 +260,7 @@ async function show() {
     });
   } catch (e) {
     if (my !== token) return;
+    group.clear(); lidMesh = null; $('#meta').textContent = ''; $('#dl').replaceChildren();
     msg.textContent = 'Could not load model.'; msg.style.display = 'grid'; console.error(e);
   }
 }
@@ -265,6 +270,7 @@ function select(slug) {
   if (!current) return;
   document.querySelectorAll('#list button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.slug === current.slug));
   history.replaceState(null, '', `#${current.slug}`);
+  $('#open').value = 0;
   show();
 }
 
@@ -275,7 +281,7 @@ function bindSeg(sel, attr, onPick) {
   }));
 }
 bindSeg('#styleSeg', 'style', (v) => { style = v; $('#open').value = 0; show(); });
-bindSeg('#partSeg', 'part', (v) => { part = v; show(); });
+bindSeg('#partSeg', 'part', (v) => { part = v; framedFor = null; $('#open').value = 0; show(); });
 document.querySelectorAll('#viewSeg button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
 $('#open').addEventListener('input', applyOpen);
 $('#spin').addEventListener('change', (e) => { controls.autoRotate = e.target.checked; if (e.target.checked && viewName !== 'iso') setView('iso'); });

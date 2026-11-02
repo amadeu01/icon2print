@@ -6,10 +6,12 @@ Usage: python scripts/build_site.py [--width 90] [--height 40]
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
 import json
 import sys
+import shutil
+import tempfile
 from pathlib import Path
+from dataclasses import replace
 
 from icon2print import BoxParams, load_icon, make_box, normalize
 
@@ -43,12 +45,10 @@ def main() -> int:
     ap.add_argument("--width", type=float, default=90)
     ap.add_argument("--height", type=float, default=40)
     a = ap.parse_args()
-    out = ROOT / "docs" / "models"
-    out.mkdir(parents=True, exist_ok=True)
+    final = ROOT / "docs" / "models"
+    out = Path(tempfile.mkdtemp(prefix="models-", dir=final.parent))  # built here, swapped in only on success
     manifest = []
     failed: list[str] = []
-    for old in out.glob("*.stl"):  # drop STLs from earlier builds (renamed/removed models)
-        old.unlink()
     params = BoxParams(height=a.height, wall=2.4)  # one wall that works for both lid styles
     for slug, label, src in MODELS:
         path = ROOT / src
@@ -71,11 +71,15 @@ def main() -> int:
             continue
         manifest.append(entry)
         print(f"{slug}: plug {entry['plug']['capacity_ml']} ml, slide {entry['slide']['capacity_ml']} ml")
-    if failed:  # don't publish a manifest that silently drops models
-        print(f"error: {len(failed)} model(s) failed ({', '.join(failed)}); manifest not written", file=sys.stderr)
+    if failed:  # keep the previous models/manifest untouched rather than publish a partial set
+        print(f"error: {len(failed)} model(s) failed ({', '.join(failed)}); docs/models left unchanged", file=sys.stderr)
+        shutil.rmtree(out)
         return 1
     data = {"params": {"width": a.width, "height": a.height, "wall": params.wall, "lid_height": params.lid_height}, "models": manifest}
     (out / "manifest.json").write_text(json.dumps(data, ensure_ascii=False, indent=1))
+    if final.exists():
+        shutil.rmtree(final)
+    out.rename(final)
     return 0
 
 

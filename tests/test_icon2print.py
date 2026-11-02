@@ -127,3 +127,19 @@ def test_slide_capacity_excludes_lid_space():
 def test_slide_bad_params_raise_valueerror(kw):
     with pytest.raises(ValueError):
         make_box(box(0, 0, 80, 80), BoxParams(wall=2.4, lid_style="slide", **{"height": 40, **kw}))
+
+
+def test_plug_lid_matches_cavity_when_flipped_over():
+    """Turn the lid over (180 deg about the vertical axis): it must fit the box even for lopsided icons."""
+    import numpy as np
+    import trimesh
+    g = Polygon([(0, 0), (80, 0), (80, 20), (30, 20), (30, 60), (0, 60)])  # L shape: not mirror-symmetric
+    r = make_box(g, BoxParams(height=40, wall=2.4))
+    cx = (g.bounds[0] + g.bounds[2]) / 2
+    flip = np.array([[-1, 0, 0, 2 * cx], [0, 1, 0, 0], [0, 0, -1, 40 + 3], [0, 0, 0, 1]], float)
+    lid = r.lid.copy()
+    lid.apply_transform(flip)
+    assert trimesh.boolean.intersection([r.body, lid], engine="manifold").volume < 1e-6   # plug clears the walls
+    unflipped = r.lid.copy()
+    unflipped.apply_translation([0, 0, 40 - 8])
+    assert trimesh.boolean.intersection([r.body, unflipped], engine="manifold").volume > 1  # sanity: it is lopsided
